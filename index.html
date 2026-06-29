@@ -1,2 +1,76 @@
-<iframe data-tally-src="https://tally.so/embed/b5DN4g?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" loading="lazy" width="100%" height="177" frameborder="0" marginheight="0" marginwidth="0" title="방명록"></iframe>
-<script>var d=document,w="https://tally.so/widgets/embed.js",v=function(){"undefined"!=typeof Tally?Tally.loadEmbeds():d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((function(e){e.src=e.dataset.tallySrc}))};if("undefined"!=typeof Tally)v();else if(d.querySelector('script[src="'+w+'"]')==null){var s=d.createElement("script");s.src=w,s.onload=v,s.onerror=v,d.body.appendChild(s);}</script>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>홍석원 연구 포트폴리오</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+        .hero {
+            height: 100vh;
+            /* 아래 url 괄호 안에 원하는 이미지 주소나 깃허브에 올린 이미지 파일명을 넣으세요 */
+            background-image: url(https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80); 
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            background-color: rgba(0,0,0,0.6);
+            background-blend-mode: overlay;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+        .btn-container {
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            padding: 15px 30px;
+            background-color: #0070f3;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #005bb5;
+        }
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid white;
+        }
+        .btn-outline:hover {
+            background-color: white;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <h1>홍석원 연구 포트폴리오</h1>
+    <p>논문 초안 및 연구 자료 공유 공간입니다.</p>
+    <div class="btn-container">
+        <!-- href 안에 깃허브에 올리신 pdf 파일명을 적어주세요 -->
+        <a href="논문파일.pdf" class="btn" download>논문 PDF 다운로드</a>
+        <!-- href 안에 Tally 폼 주소를 적어주세요 -->
+        <a href="Tally주소입력" class="btn btn-outline" target="_blank">방명록 남기기</a>
+    </div>
+</div>
+
+</body>
+</html>
