@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>카카오톡 TXT·HWPX 뷰어</title>
+<style>
+  :root{
+    --chat-bg:#b2c7d9;
+    --mine:#fee500;
+    --other:#ffffff;
+    --text:#191919;
+    --muted:#687786;
+    --panel:#f7f8fa;
+    --line:#d9dee3;
+    --accent:#3b4652;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR","Apple SD Gothic Neo",sans-serif;color:var(--text);background:#eef1f4}
+  body{display:flex;min-height:100vh}
+  .app{width:100%;display:grid;grid-template-columns:310px 1fr;min-height:100vh}
+  .sidebar{background:#fff;border-right:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+  .brand{font-weight:800;font-size:20px;letter-spacing:-.4px}
+  .sub{font-size:12px;color:#6f7780;line-height:1.55;margin-top:-8px}
+  .group{display:flex;flex-direction:column;gap:7px}
+  label{font-size:12px;font-weight:700;color:#525b65}
+  select,input[type="text"],input[type="date"]{
+    width:100%;border:1px solid #cfd5dc;border-radius:10px;padding:10px 11px;font-size:13px;background:#fff;outline:none
+  }
+  select:focus,input:focus{border-color:#7f8c99;box-shadow:0 0 0 3px rgba(80,100,120,.08)}
+  .btn{
+    border:0;border-radius:10px;padding:11px 13px;font-weight:700;font-size:13px;cursor:pointer;background:#20252b;color:#fff
+  }
+  .btn.secondary{background:#edf0f3;color:#252a30}
+  .btn.yellow{background:#fee500;color:#191919}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .dropzone{
+    border:2px dashed #c7cdd4;border-radius:14px;padding:17px 12px;text-align:center;background:#fafbfc;cursor:pointer;transition:.15s
+  }
+  .dropzone.drag{border-color:#666;background:#f0f2f4;transform:scale(1.01)}
+  .dropzone b{display:block;margin-bottom:5px;font-size:14px}
+  .dropzone span{font-size:11px;color:#737b83}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .stat{background:#f4f6f8;border-radius:10px;padding:10px}
+  .stat .n{font-weight:800;font-size:17px}.stat .t{font-size:10px;color:#747c84;margin-top:2px}
+
+  .pager-box{background:#f6f7f9;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
+  .pager-row{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .pager-row button{border:1px solid #d7dce1;background:#fff;border-radius:8px;padding:8px 6px;font-size:12px;font-weight:700;cursor:pointer}
+  .pager-row button:disabled{opacity:.4;cursor:not-allowed}
+  .page-info{font-size:11px;color:#66717b;text-align:center;line-height:1.45}
+
+  .hint{font-size:11px;line-height:1.55;color:#6d747c;background:#f6f7f9;border-radius:10px;padding:10px}
+  .main{min-width:0;display:flex;flex-direction:column;height:100vh;width:100%;max-width:480px;margin:0 auto}
+  @media(min-width:851px){
+    /* 데스크톱에서는 휴대폰 프레임처럼 중앙에 띄움 */
+    .main{height:calc(100vh - 36px);margin-top:18px;margin-bottom:18px;border-radius:28px;overflow:hidden;
+      border:1px solid #cfd6dd;box-shadow:0 24px 70px rgba(25,35,45,.28)}
+  }
+  .topbar{background:#fff;border-bottom:1px solid var(--line);padding:10px 18px;display:flex;flex-direction:column;justify-content:center;gap:5px;min-height:64px}
+  .topbar-main{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .topbar-left{display:flex;align-items:center;gap:10px;min-width:0}
+  .room-title{min-width:0}
+  .room-title .name{font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .meta{font-size:11px;color:#7a838b;line-height:1.5}
+  .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .mini{border:1px solid #d7dce1;background:#fff;border-radius:9px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer}
+  .chat-wrap{position:relative;flex:1;min-height:0;background:var(--chat-bg)}
+  .chat{height:100%;overflow:auto;padding:18px 12px 70px}
+  .empty{
+    height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:#53616e;padding:30px
+  }
+  .empty .card{background:rgba(255,255,255,.72);backdrop-filter:blur(4px);padding:26px;border-radius:18px;max-width:460px;box-shadow:0 8px 30px rgba(0,0,0,.05)}
+  .empty h2{margin:0 0 8px;font-size:21px}.empty p{margin:0;font-size:13px;line-height:1.6}
+  .date-line{display:flex;justify-content:center;margin:14px 0 18px}
+  .date-line span{font-size:11px;color:#fff;background:rgba(70,86,99,.42);padding:6px 10px;border-radius:999px}
+  .date-pill{
+    position:absolute;top:12px;left:50%;transform:translateX(-50%) translateY(-6px);
+    background:rgba(60,74,86,.8);color:#fff;font-size:12px;font-weight:700;white-space:nowrap;
+    padding:7px 14px;border-radius:999px;opacity:0;pointer-events:none;z-index:6;
+    transition:opacity .18s ease,transform .18s ease;box-shadow:0 4px 14px rgba(0,0,0,.18)
+  }
+  .date-pill.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .msg-row{display:flex;margin:8px 0;gap:8px;align-items:flex-start}
+  .msg-row.mine{justify-content:flex-end}
+  .avatar{
+    width:36px;height:36px;border-radius:13px;background:#eef2f5;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:800;color:#5b6670;flex:0 0 36px;box-shadow:0 1px 2px rgba(0,0,0,.08)
+  }
+  .msg-col{max-width:78%}
+  .sender{font-size:11px;margin:1px 0 5px 2px;color:#263441;font-weight:700}
+  .bubble-line{display:flex;align-items:flex-end;gap:5px}
+  .mine .bubble-line{flex-direction:row-reverse}
+  .bubble{
+    white-space:pre-wrap;word-break:break-word;line-height:1.48;font-size:14px;padding:9px 11px;border-radius:4px 12px 12px 12px;
+    background:var(--other);box-shadow:0 1px 1px rgba(0,0,0,.04)
+  }
+  .mine .bubble{background:var(--mine);border-radius:12px 4px 12px 12px}
+  .time{font-size:9px;color:#53616d;white-space:nowrap;margin-bottom:2px}
+  .system-row{text-align:center;margin:10px 0;color:#52616e;font-size:11px}
+  .system-row span{background:rgba(255,255,255,.44);padding:5px 9px;border-radius:999px}
+  mark{background:#ffef70;border-radius:2px;padding:0 1px}
+  .fab{
+    position:absolute;right:18px;bottom:18px;width:44px;height:44px;border:0;border-radius:50%;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.18);
+    cursor:pointer;font-size:18px
+  }
+  .footer-note{font-size:10px;color:#87909a;text-align:center;margin-top:auto;padding-top:2px}
+  #fileInput{display:none}
+  @media(max-width:850px){
+    .app{grid-template-columns:1fr}
+    .sidebar{position:fixed;z-index:20;left:0;top:0;bottom:0;width:min(88vw,330px);transform:translateX(-102%);transition:.2s;box-shadow:4px 0 20px rgba(0,0,0,.16)}
+    .sidebar.open{transform:translateX(0)}
+    .main{height:100vh}
+    .mobile-menu{display:inline-block!important}
+    .msg-col{max-width:82%}
+  }
+  .mobile-menu{display:none}
+  @media print{
+    body{background:white}
+    .sidebar,.topbar,.fab,.date-pill{display:none!important}
+    .app{display:block}
+    .main{height:auto;max-width:none;margin:0;border-radius:0;box-shadow:none;border:0}
+    .chat-wrap{background:var(--chat-bg)}
+    .chat{height:auto;overflow:visible;padding:18px}
+    .msg-col{max-width:72%}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">카카오톡 TXT·HWPX 뷰어</div>
+    <div class="sub">TXT·HWPX 파일은 브라우저 안에서만 처리됩니다. 서버로 업로드하지 않습니다.</div>
+
+    <div class="dropzone" id="dropzone">
+      <b>TXT / HWPX 파일을 여기에 놓으세요</b>
+      <span>또는 클릭해서 파일 선택</span>
+    </div>
+    <input id="fileInput" type="file" accept=".txt,.hwpx,text/plain" />
+
+    <div class="group">
+      <label for="encoding">문자 인코딩 (TXT 전용)</label>
+      <select id="encoding">
+        <option value="utf-8">UTF-8 (권장)</option>
+        <option value="euc-kr">EUC-KR / CP949</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="meSelect">내 이름</label>
+      <select id="meSelect" disabled>
+        <option value="">파일을 먼저 불러오세요</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="dateSelect">날짜</label>
+      <select id="dateSelect" disabled>
+        <option value="">전체 날짜</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="pageSize">한 번에 표시할 메시지</label>
+      <select id="pageSize" disabled>
+        <option value="200">200개 · 가장 빠름</option>
+        <option value="500" selected>500개 · 권장</option>
+        <option value="1000">1,000개</option>
+        <option value="2000">2,000개 · PDF용</option>
+      </select>
+    </div>
+
+    <div class="pager-box">
+      <div class="page-info" id="pageInfo">페이지 0 / 0</div>
+      <div class="pager-row">
+        <button id="prevPage" disabled>← 이전</button>
+        <button id="nextPage" disabled>다음 →</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <label for="search">대화 검색</label>
+      <input id="search" type="text" placeholder="이름 또는 메시지 검색" disabled />
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n" id="msgCount">0</div><div class="t">표시 메시지</div></div>
+      <div class="stat"><div class="n" id="peopleCount">0</div><div class="t">참여자</div></div>
+    </div>
+
+    <button class="btn yellow" id="printBtn" disabled>현재 페이지 인쇄 / PDF</button>
+    <button class="btn secondary" id="exportBtn" disabled>현재 화면 HTML 저장</button>
+    <button class="btn secondary" id="resetBtn">초기화</button>
+
+    <div class="hint">
+      지원 형식 예시<br>
+      ① [홍길동] [오후 2:31] 메시지<br>
+      ② 2026년 9월 22일 오후 2:31, 홍길동 : 메시지<br><br>
+      여러 줄 메시지도 자동으로 이어 붙입니다.<br>
+      HWPX는 한글 문서의 문단 텍스트를 추출해<br>
+      같은 방식으로 표시합니다.
+    </div>
+    <div class="footer-note">로컬 전용 · 외부 전송 없음</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-main">
+        <div class="topbar-left">
+          <button class="mini mobile-menu" id="menuBtn">☰</button>
+          <div class="room-title">
+            <div class="name" id="roomName">대화방</div>
+          </div>
+        </div>
+        <div class="top-actions">
+          <button class="mini" id="chooseBtn">파일 불러오기</button>
+          <button class="mini" id="topPrintBtn" disabled>현재 페이지 PDF</button>
+        </div>
+      </div>
+      <div class="meta" id="roomMeta">TXT / HWPX 파일을 불러오세요</div>
+    </header>
+
+    <section class="chat-wrap">
+      <div class="chat" id="chat">
+        <div class="empty">
+          <div class="card">
+            <h2>카카오톡 대화를 그대로 보기 좋게</h2>
+            <p>카카오톡에서 내보낸 TXT나<br>HWPX(한글 문서)를 끌어놓거나<br>‘파일 불러오기’를 눌러 시작하세요.</p>
+          </div>
+        </div>
+      </div>
+      <button class="fab" id="toTop" title="맨 위로">↑</button>
+      <div class="date-pill" id="datePill"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const els = {
+    file: $('#fileInput'), drop: $('#dropzone'), enc: $('#encoding'), me: $('#meSelect'),
+    date: $('#dateSelect'), search: $('#search'), chat: $('#chat'), room: $('#roomName'),
+    meta: $('#roomMeta'), count: $('#msgCount'), people: $('#peopleCount'),
+    print: $('#printBtn'), topPrint: $('#topPrintBtn'), export: $('#exportBtn'),
+    reset: $('#resetBtn'), choose: $('#chooseBtn'), toTop: $('#toTop'),
+    sidebar: $('#sidebar'), menu: $('#menuBtn'), pill: $('#datePill'),
+    pageSize: $('#pageSize'), pageInfo: $('#pageInfo'), prevPage: $('#prevPage'), nextPage: $('#nextPage')
+  };
+
+  let state = {fileName:'',raw:'',items:[],participants:[],dates:[],me:'',query:'',date:'',page:0,pageSize:500,filtered:[],filteredMsgCount:0,totalMessages:0,totalSystem:0,dateTops:[],renderAt:0};
+
+  const escapeHTML = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  function normalizeDateLabel(s){ return s.replace(/^-+\s*/,'').replace(/\s*-+$/,'').trim(); }
+  function extractDateKey(label){
+    const m=label.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+    if(!m) return label;
+    return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  }
+
+  function parseText(text){
+    const lines=text.replace(/\r\n?/g,'\n').split('\n');
+    const items=[]; let currentDate=''; let lastMsg=null;
+    const datePatterns=[
+      /^-+\s*(\d{4}년\s*\d{1,2}월\s*\d{1,2}일[^-]*)\s*-+$/,
+      /^(\d{4}년\s*\d{1,2}월\s*\d{1,2}일(?:\s*[월화수목금토일]요일)?)\s*$/,
+      /^(\d{4}[.\-\/]\s*\d{1,2}[.\-\/]\s*\d{1,2}.*?)$/
+    ];
+    const desktop=/^\[([^\]]+)\]\s*\[(오전|오후)\s*(\d{1,2}):(\d{2})\]\s?(.*)$/;
+    const desktop24=/^\[([^\]]+)\]\s*\[(\d{1,2}):(\d{2})\]\s?(.*)$/;
+    const mobile=/^(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)\s*(오전|오후)\s*(\d{1,2}):(\d{2}),\s*(.*?)\s*:\s?(.*)$/;
+    const mobileDot=/^(\d{4}[.\-\/]\s*\d{1,2}[.\-\/]\s*\d{1,2})\s*(오전|오후)?\s*(\d{1,2}):(\d{2}),\s*(.*?)\s*:\s?(.*)$/;
+
+    for(const rawLine of lines){
+      const line=rawLine; let dm=null;
+      for(const p of datePatterns){ const m=line.match(p); if(m){dm=m;break;} }
+      if(dm && !line.includes(' : ')){ currentDate=normalizeDateLabel(dm[1]||line); lastMsg=null; continue; }
+
+      let m;
+      if((m=line.match(desktop))){
+        lastMsg={type:'msg',sender:m[1].trim(),time:`${m[2]} ${m[3]}:${m[4]}`,text:m[5],date:currentDate,dateKey:extractDateKey(currentDate)};
+        items.push(lastMsg); continue;
+      }
+      if((m=line.match(desktop24))){
+        lastMsg={type:'msg',sender:m[1].trim(),time:`${m[2]}:${m[3]}`,text:m[4],date:currentDate,dateKey:extractDateKey(currentDate)};
+        items.push(lastMsg); continue;
+      }
+      if((m=line.match(mobile))){
+        currentDate=m[1].trim();
+        lastMsg={type:'msg',sender:m[5].trim(),time:`${m[2]} ${m[3]}:${m[4]}`,text:m[6],date:currentDate,dateKey:extractDateKey(currentDate)};
+        items.push(lastMsg); continue;
+      }
+      if((m=line.match(mobileDot))){
+        currentDate=m[1].trim();
+        lastMsg={type:'msg',sender:m[5].trim(),time:`${m[2]?m[2]+' ':''}${m[3]}:${m[4]}`,text:m[6],date:currentDate,dateKey:extractDateKey(currentDate)};
+        items.push(lastMsg); continue;
+      }
+      if(line.trim() && !lastMsg && (/님이 .*했습니다|채팅방|초대했습니다|나갔습니다/.test(line))){
+        items.push({type:'system',text:line.trim(),date:currentDate,dateKey:extractDateKey(currentDate)}); continue;
+      }
+      if(lastMsg) lastMsg.text+='\n'+line;
+      else if(line.trim()) items.push({type:'system',text:line.trim(),date:currentDate,dateKey:extractDateKey(currentDate)});
+    }
+
+    for(const it of items){
+      if(it.type==='msg') it.text=it.text.replace(/\n+$/,'');
+      it._search=it.type==='msg' ? `${it.sender}\n${it.text}`.toLowerCase() : String(it.text||'').toLowerCase();
+    }
+    return items;
+  }
+
+  // ---- HWPX 지원: 브라우저 내장 기능만으로 ZIP을 풀고 본문 텍스트 추출 ----
+  async function unzipHwpx(buffer){
+    const dv=new DataView(buffer), len=dv.byteLength, td=new TextDecoder('utf-8');
+    // EOCD(End of Central Directory) 찾기
+    let eocd=-1;
+    const maxBack=Math.min(len-22,65557);
+    for(let i=len-22;i>=len-22-maxBack&&i>=0;i--){
+      if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;}
+    }
+    if(eocd<0) throw new Error('ZIP 구조를 찾지 못했습니다. 올바른 HWPX 파일인지 확인해 주세요.');
+    const count=dv.getUint16(eocd+10,true), cdOff=dv.getUint32(eocd+16,true);
+    const sections=[]; let p=cdOff;
+    for(let i=0;i<count;i++){
+      if(dv.getUint32(p,true)!==0x02014b50) throw new Error('압축 파일 구조가 손상되었습니다.');
+      const method=dv.getUint16(p+10,true);
+      const compSize=dv.getUint32(p+20,true);
+      const nLen=dv.getUint16(p+28,true), xLen=dv.getUint16(p+30,true), cLen=dv.getUint16(p+32,true);
+      const localOff=dv.getUint32(p+42,true);
+      const name=td.decode(new Uint8Array(buffer,p+46,nLen));
+      const m=name.match(/^Contents\/section(\d+)\.xml$/i);
+      if(m) sections.push({idx:+m[1],method,compSize,localOff});
+      p+=46+nLen+xLen+cLen;
+    }
+    sections.sort((a,b)=>a.idx-b.idx);
+    if(!sections.length) throw new Error('HWPX 본문(section XML)을 찾지 못했습니다.');
+    const out=[];
+    for(const s of sections){
+      if(dv.getUint32(s.localOff,true)!==0x04034b50) throw new Error('압축 파일 구조가 손상되었습니다.');
+      const nl=dv.getUint16(s.localOff+26,true), xl=dv.getUint16(s.localOff+28,true);
+      const start=s.localOff+30+nl+xl;
+      const comp=new Uint8Array(buffer,start,s.compSize);
+      let raw;
+      if(s.method===0) raw=comp; // 무압축
+      else if(s.method===8){     // deflate
+        const ds=new DecompressionStream('deflate-raw');
+        raw=new Uint8Array(await new Response(new Blob([comp]).stream().pipeThrough(ds)).arrayBuffer());
+      } else throw new Error('지원하지 않는 압축 방식입니다.');
+      out.push(td.decode(raw));
+    }
+    return out;
+  }
+
+  function hwpxToText(xmlList){
+    const lines=[];
+    for(const rawXml of xmlList){
+      const xml=rawXml.replace(/^\uFEFF/,'');
+      const doc=new DOMParser().parseFromString(xml,'application/xml');
+      if(doc.querySelector('parsererror')) throw new Error('HWPX 본문 XML을 해석하지 못했습니다.');
+      const paras=doc.getElementsByTagNameNS('*','p');
+      for(const pg of paras){
+        let line='';
+        const runs=pg.getElementsByTagNameNS('*','t');
+        for(const t of runs) line+=t.textContent;
+        lines.push(line);
+      }
+    }
+    return lines.join('\n');
+  }
+
+  function showError(msg){
+    els.chat.innerHTML=`<div class="empty"><div class="card"><h2>파일을 읽지 못했습니다</h2><p>${escapeHTML(msg)}<br>다른 파일로 다시 시도해 주세요.</p></div></div>`;
+    els.count.textContent='0'; els.meta.textContent='인식된 대화 없음'; updatePager(0,0);
+  }
+
+  function handleText(text){
+    state.raw=text;
+    state.items=parseText(state.raw);
+
+    const people=new Set(), dateMap=new Map(); let total=0, sys=0;
+    for(const it of state.items){
+      if(it.type==='msg'){ total++; if(it.sender) people.add(it.sender); }
+      else sys++;
+      if(it.dateKey && it.date && !dateMap.has(it.dateKey)) dateMap.set(it.dateKey,it.date);
+    }
+    state.participants=[...people];
+    state.dates=[...dateMap.entries()].map(([key,label])=>({key,label}));
+    state.totalMessages=total; state.totalSystem=sys; state.page=0;
+    populateControls(); render(true);
+  }
+
+  function readFile(file){
+    if(!file) return;
+    state.fileName=file.name;
+    const isHwpx=/\.hwpx$/i.test(file.name);
+    if(isHwpx && !('DecompressionStream' in window)){
+      showError('이 브라우저는 HWPX 압축 해제를 지원하지 않습니다. 최신 Chrome·Edge·Safari에서 열어주세요.');
+      return;
+    }
+    const reader=new FileReader();
+    reader.onload=()=>{
+      (async()=>{
+        try{
+          let text;
+          if(isHwpx){
+            const xmlList=await unzipHwpx(reader.result);
+            text=hwpxToText(xmlList);
+            if(!text.trim()) throw new Error('HWPX에서 텍스트를 찾지 못했습니다.');
+          }else{
+            try{ text=new TextDecoder(els.enc.value).decode(reader.result); }
+            catch(e){ text=new TextDecoder('utf-8').decode(reader.result); }
+          }
+          handleText(text);
+        }catch(err){
+          showError(err && err.message ? err.message : '파일을 읽는 중 오류가 발생했습니다.');
+        }
+      })();
+    };
+    reader.onerror=()=>showError('파일을 읽는 중 오류가 발생했습니다.');
+    reader.readAsArrayBuffer(file);
+  }
+
+  function populateControls(){
+    els.me.innerHTML='';
+    if(state.participants.length){
+      const ph=document.createElement('option'); ph.value=''; ph.textContent='내 이름을 선택하세요'; els.me.appendChild(ph);
+      state.participants.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;els.me.appendChild(o);});
+      els.me.disabled=els.search.disabled=els.date.disabled=els.pageSize.disabled=false;
+      els.print.disabled=els.topPrint.disabled=els.export.disabled=false;
+    }
+    els.date.innerHTML='<option value="">전체 날짜</option>';
+    state.dates.forEach(d=>{const o=document.createElement('option');o.value=d.key;o.textContent=d.label;els.date.appendChild(o);});
+    els.room.textContent=state.fileName.replace(/\.(txt|hwpx)$/i,'')||'대화방';
+    els.people.textContent=state.participants.length;
+  }
+
+  function highlight(text,q){
+    const safe=escapeHTML(text);
+    if(!q) return safe;
+    const escapedQ=q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    try{return safe.replace(new RegExp(`(${escapedQ})`,'gi'),'<mark>$1</mark>');}catch(e){return safe;}
+  }
+
+  function filterItems(){
+    const q=state.query.trim().toLowerCase(), date=state.date, result=[];
+    let msgCount=0;
+    for(const it of state.items){
+      if(date && it.dateKey!==date) continue;
+      if(q && !it._search.includes(q)) continue;
+      result.push(it);
+      if(it.type==='msg') msgCount++;
+    }
+    state.filteredMsgCount=msgCount;
+    return result;
+  }
+
+  function updatePager(total,totalPages){
+    if(!total){els.pageInfo.textContent='페이지 0 / 0';els.prevPage.disabled=els.nextPage.disabled=true;return;}
+    const start=state.page*state.pageSize+1, end=Math.min((state.page+1)*state.pageSize,total);
+    els.pageInfo.textContent=`페이지 ${state.page+1} / ${totalPages} · ${start.toLocaleString()}~${end.toLocaleString()} / ${total.toLocaleString()}`;
+    els.prevPage.disabled=state.page<=0; els.nextPage.disabled=state.page>=totalPages-1;
+  }
+
+  // ---- 스크롤 중 날짜 툴팁 (카톡처럼) ----
+  let pillTimer=null;
+  function hidePill(){ clearTimeout(pillTimer); els.pill.classList.remove('show'); }
+  function cacheDateTops(){
+    const chatRect=els.chat.getBoundingClientRect(), st=els.chat.scrollTop;
+    state.dateTops=[...els.chat.querySelectorAll('.date-line')].map(el=>({
+      top: el.getBoundingClientRect().top - chatRect.top + st,
+      label: el.textContent.trim()
+    }));
+  }
+  function onChatScroll(){
+    if(Date.now()-(state.renderAt||0)<200) return; // 렌더 직후의 프로그래밍 스크롤은 무시
+    const list=state.dateTops;
+    if(!list.length){ hidePill(); return; }
+    const y=els.chat.scrollTop+4;
+    let label=list[0].label;
+    for(const d of list){ if(d.top<=y) label=d.label; else break; }
+    els.pill.textContent=label;
+    els.pill.classList.add('show');
+    clearTimeout(pillTimer);
+    pillTimer=setTimeout(()=>els.pill.classList.remove('show'),900);
+  }
+
+  function render(reFilter=true){
+    if(!state.items.length){
+      els.chat.innerHTML=`<div class="empty"><div class="card"><h2>대화를 찾지 못했습니다</h2><p>다른 인코딩으로 바꾸고 파일을 다시 불러오거나<br>파일 형식을 확인해 주세요.</p></div></div>`;
+      els.count.textContent='0'; els.meta.textContent='인식된 대화 없음'; updatePager(0,0);
+      state.dateTops=[]; hidePill(); return;
+    }
+
+    state.me=els.me.value; state.query=els.search.value; state.date=els.date.value;
+    state.pageSize=parseInt(els.pageSize.value,10)||500;
+    if(reFilter) state.filtered=filterItems();
+
+    const total=state.filtered.length, totalPages=Math.max(1,Math.ceil(total/state.pageSize));
+    state.page=Math.max(0,Math.min(state.page,totalPages-1));
+    const start=state.page*state.pageSize, end=Math.min(start+state.pageSize,total);
+    const list=state.filtered.slice(start,end);
+
+    let html='', lastDateKey=null;
+    for(const it of list){
+      if(it.dateKey!==lastDateKey && it.date){html+=`<div class="date-line"><span>${escapeHTML(it.date)}</span></div>`;lastDateKey=it.dateKey;}
+      if(it.type==='system'){
+        html+=`<div class="system-row"><span>${highlight(it.text,state.query)}</span></div>`;
+      }else{
+        const mine=state.me&&it.sender===state.me, initial=escapeHTML((it.sender||'?').trim().slice(0,1));
+        html+=`<div class="msg-row ${mine?'mine':''}">${mine?'':`<div class="avatar">${initial}</div>`}<div class="msg-col">${mine?'':`<div class="sender">${highlight(it.sender,state.query)}</div>`}<div class="bubble-line"><div class="bubble">${highlight(it.text,state.query)}</div><div class="time">${escapeHTML(it.time)}</div></div></div></div>`;
+      }
+    }
+    if(!html) html=`<div class="empty"><div class="card"><h2>조건에 맞는 대화가 없습니다</h2><p>검색어나 날짜 필터를 변경해 보세요.</p></div></div>`;
+
+    els.chat.innerHTML=html;
+    cacheDateTops(); hidePill();
+    els.count.textContent=state.filteredMsgCount.toLocaleString();
+    els.meta.textContent=`참여자 ${state.participants.length}명 · 메시지 ${state.totalMessages.toLocaleString()}개 · 시스템 ${state.totalSystem.toLocaleString()}개 · 조건 결과 ${state.filteredMsgCount.toLocaleString()}개`;
+    updatePager(total,totalPages); els.chat.scrollTop=0; state.renderAt=Date.now();
+  }
+
+  function exportHTML(){
+    const rendered=els.chat.innerHTML, title=escapeHTML(els.room.textContent), style=document.querySelector('style').innerHTML;
+    const doc=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>${style}body{display:block;background:var(--chat-bg)}.chat{height:auto;min-height:100vh;overflow:visible;width:100%;max-width:480px}.sidebar,.topbar,.fab{display:none!important}.app{display:block;min-height:100vh}.main{height:auto}.chat-wrap{min-height:100vh;display:flex;justify-content:center}</style></head><body><div class="chat-wrap"><div class="chat">${rendered}</div></div></body></html>`;
+    const blob=new Blob([doc],{type:'text/html;charset=utf-8'}), a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`${(state.fileName||'kakao').replace(/\.(txt|hwpx)$/i,'')}_페이지${state.page+1}_뷰어.html`;
+    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500);
+  }
+
+  function reset(){
+    state={fileName:'',raw:'',items:[],participants:[],dates:[],me:'',query:'',date:'',page:0,pageSize:500,filtered:[],filteredMsgCount:0,totalMessages:0,totalSystem:0,dateTops:[],renderAt:0};
+    els.file.value=''; els.me.innerHTML='<option value="">파일을 먼저 불러오세요</option>'; els.me.disabled=true;
+    els.date.innerHTML='<option value="">전체 날짜</option>'; els.date.disabled=true;
+    els.search.value=''; els.search.disabled=true; els.pageSize.value='500'; els.pageSize.disabled=true;
+    els.print.disabled=els.topPrint.disabled=els.export.disabled=true;
+    els.room.textContent='대화방'; els.meta.textContent='TXT / HWPX 파일을 불러오세요'; els.count.textContent='0'; els.people.textContent='0';
+    els.pageInfo.textContent='페이지 0 / 0'; els.prevPage.disabled=els.nextPage.disabled=true;
+    els.chat.innerHTML=`<div class="empty"><div class="card"><h2>카카오톡 대화를 그대로 보기 좋게</h2><p>카카오톡에서 내보낸 TXT나<br>HWPX(한글 문서)를 끌어놓거나<br>‘파일 불러오기’를 눌러 시작하세요.</p></div></div>`;
+    hidePill();
+  }
+
+  els.drop.addEventListener('click',()=>els.file.click());
+  els.choose.addEventListener('click',()=>els.file.click());
+  els.file.addEventListener('change',e=>readFile(e.target.files[0]));
+  els.enc.addEventListener('change',()=>{if(els.file.files[0])readFile(els.file.files[0]);});
+  ['dragenter','dragover'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.add('drag');}));
+  ['dragleave','drop'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.remove('drag');}));
+  els.drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)readFile(f);});
+  els.me.addEventListener('change',()=>render(false));
+  els.date.addEventListener('change',()=>{state.page=0;render(true);});
+  els.pageSize.addEventListener('change',()=>{state.page=0;render(false);});
+
+  let searchTimer=null;
+  els.search.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{state.page=0;render(true);},180);});
+  els.prevPage.addEventListener('click',()=>{if(state.page>0){state.page--;render(false);}});
+  els.nextPage.addEventListener('click',()=>{const totalPages=Math.ceil(state.filtered.length/state.pageSize);if(state.page<totalPages-1){state.page++;render(false);}});
+
+  els.print.addEventListener('click',()=>window.print());
+  els.topPrint.addEventListener('click',()=>window.print());
+  els.export.addEventListener('click',exportHTML);
+  els.reset.addEventListener('click',reset);
+  els.toTop.addEventListener('click',()=>els.chat.scrollTo({top:0,behavior:'smooth'}));
+  els.chat.addEventListener('scroll',onChatScroll,{passive:true});
+  els.menu.addEventListener('click',()=>els.sidebar.classList.toggle('open'));
+  document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'&&!els.search.disabled){e.preventDefault();els.search.focus();els.search.select();}});
+})();
+</script>
+</body>
+</html>

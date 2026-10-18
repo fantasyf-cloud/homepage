@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Studio Tasy</title>
+<style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+        .hero {
+            height: 100vh;
+            /* 아래 url 괄호 안에 원하는 이미지 주소나 깃허브에 올린 이미지 파일명을 넣으세요 */
+            background-image: url(https://tasy.net/image/bg.jpg); 
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            background-color: rgba(0,0,0,0.6);
+            background-blend-mode: overlay;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+        .btn-container {
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            padding: 15px 30px;
+            background-color: #0070f3;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #005bb5;
+        }
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid white;
+        }
+        .btn-outline:hover {
+            background-color: white;
+            color: black;
+        }
+        .visitor-counter {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 16px;
+            text-align: center;
+            color: rgba(255,255,255,.7);
+            font-size: 13px;
+            letter-spacing: 1px;
+            display: none;
+        }
+        .visitor-counter b { color: #fff; }
+    </style>
+</head>
+<body>
+<div class="hero">
+<h1>Studio Tasy</h1>
+<p>자료 공유 및 소통 공간입니다.</p>
+<div class="btn-container"><a class="btn" href="kakaotalk-viewer.html">카카오톡뷰어</a><a class="btn btn-outline" href="https://tally.so/r/b5DN4g" target="_blank">방명록 남기기</a></div>
+</div>
+<div class="visitor-counter" id="visitor-counter">오늘 <b id="cnt-today">-</b> 명 · 전체 <b id="cnt-total">-</b> 명</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  /* === 설정: 방명록과 같은 Supabase 프로젝트의 값 (SUPABASE_SETUP.txt 참고) === */
+  var SUPABASE_URL = "https://scgfnkmwnrtknrsqnrns.supabase.co";
+  var SUPABASE_ANON_KEY = "sb_publishable_aMW8gMl7zgkgtU7-ZCKi1w_7LBqYnaW";
+  if (SUPABASE_URL.indexOf("여기에_") === 0) return; /* 미설정 시 카운터 숨김 */
+  try {
+    var db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    db.from('visits').insert({}).then(function(){
+      var today = new Date().toISOString().slice(0,10) + 'T00:00:00';
+      return Promise.all([
+        db.from('visits').select('*', { count: 'exact', head: true }),
+        db.from('visits').select('*', { count: 'exact', head: true }).gte('created_at', today)
+      ]);
+    }).then(function(res){
+      var total = res[0].count || 0, day = res[1].count || 0;
+      document.getElementById('cnt-total').textContent = Number(total).toLocaleString();
+      document.getElementById('cnt-today').textContent = Number(day).toLocaleString();
+      document.getElementById('visitor-counter').style.display = 'block';
+    }).catch(function(){});
+  } catch(e){}
+})();
+</script>
+</body>
+</html>
