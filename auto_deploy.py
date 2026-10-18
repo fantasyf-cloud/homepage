@@ -7,6 +7,15 @@ GIT_PATH = r"C:\Program Files\Git\bin\git.exe"
 SITE_BASE_URL = "https://tasy.net"
 TALLY_URL = "https://tally.so/r/b5DN4g"
 
+# PDF 버튼 자동생성에서 제외할 파일 (카카오톡 뷰어 등으로 대체된 항목)
+PDF_BUTTON_EXCLUDE = {"엄마가될자격.pdf"}
+
+# 수동 버튼: (표시 이름, 링크) — PDF 버튼 뒤, 방명록 버튼 앞에 추가
+# auto_deploy.py를 실행해도 이 버튼들은 유지됩니다
+CUSTOM_BUTTONS = [
+    ("카카오톡뷰어", "kakaotalk-viewer.html"),  # 카톡 TXT·HWPX 뷰어 도구
+]
+
 # 이 스크립트가 있는 디렉토리를 작업 경로로 사용
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -25,8 +34,11 @@ def run_git(args):
 
 
 def update_site_and_push():
-    # 규칙 1: 루트 디렉토리의 PDF 파일 목록 탐색
-    pdf_files = sorted([f for f in os.listdir(REPO_DIR) if f.endswith('.pdf')])
+    # 규칙 1: 루트 디렉토리의 PDF 파일 목록 탐색 (제외 목록 적용)
+    pdf_files = sorted([
+        f for f in os.listdir(REPO_DIR)
+        if f.endswith('.pdf') and f not in PDF_BUTTON_EXCLUDE
+    ])
     print(f"발견된 PDF: {pdf_files}")
 
     # index.html 읽기
@@ -49,7 +61,14 @@ def update_site_and_push():
         btn_container.append(new_btn)
         print(f"버튼 추가: {display_name} → {href}")
 
-    # 규칙 1: 방명록 버튼은 항상 마지막 순서로 유지
+    # 수동 버튼 추가 (PDF 뒤, 방명록 앞)
+    for title, href in CUSTOM_BUTTONS:
+        new_btn = soup.new_tag('a', href=href, **{'class': 'btn'})
+        new_btn.string = title
+        btn_container.append(new_btn)
+        print(f"수동 버튼 추가: {title} → {href}")
+
+    # 규칙 2: 방명록 버튼은 항상 마지막 순서로 유지
     if tally_btn:
         btn_container.append(tally_btn)
 
