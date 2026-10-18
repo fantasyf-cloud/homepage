@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>방명록 — Studio Tasy</title>
+<style>
+  :root{--ink:#161616;--muted:#8a8a8a;--line:#e9e9e9;--bg:#fbfbfa}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.6}
+  .wrap{max-width:680px;margin:0 auto;padding:0 24px}
+  header{padding:26px 0;display:flex;justify-content:space-between;align-items:center}
+  .logo{font-weight:800;font-size:17px;text-decoration:none;color:var(--ink)}
+  header nav a{color:var(--muted);text-decoration:none;font-size:14px;margin-left:20px}
+  header nav a:hover{color:var(--ink)}
+  h1{font-family:Georgia,'Noto Serif KR',serif;font-size:38px;font-weight:400;
+    letter-spacing:-.5px;margin:48px 0 8px}
+  .sub{color:var(--muted);font-size:15px;margin-bottom:32px}
+  form{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:36px}
+  label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
+  input,textarea{width:100%;border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;font-size:15px;font-family:inherit;margin-bottom:14px;background:#fff;color:var(--ink)}
+  input:focus,textarea:focus{outline:none;border-color:#161616}
+  textarea{resize:vertical;min-height:96px}
+  button{background:#161616;color:#fff;border:none;border-radius:10px;
+    padding:13px 28px;font-size:15px;font-weight:600;cursor:pointer}
+  button:disabled{opacity:.5;cursor:default}
+  .entry{border-top:1px solid var(--line);padding:18px 2px}
+  .entry .meta{font-size:13px;color:var(--muted);margin-bottom:6px}
+  .entry .msg{font-size:15px;white-space:pre-wrap;word-break:break-word}
+  .empty{color:var(--muted);font-size:15px;padding:24px 2px}
+  footer{padding:52px 0 64px;color:#b8b8b8;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="logo" href="index.html">Studio Tasy</a>
+    <nav><a href="index.html">홈</a></nav>
+  </header>
+
+  <h1>방명록</h1>
+  <p class="sub">가볍게 인사 남겨주세요.</p>
+
+  <form id="gb-form">
+    <label for="gb-name">이름</label>
+    <input id="gb-name" maxlength="30" placeholder="이름" required>
+    <label for="gb-msg">메시지</label>
+    <textarea id="gb-msg" maxlength="500" placeholder="메시지를 남겨주세요" required></textarea>
+    <button type="submit" id="gb-btn">남기기</button>
+  </form>
+
+  <div id="gb-list"><p class="empty">불러오는 중...</p></div>
+
+  <footer>© 2026 Studio Tasy</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* === 설정: SUPABASE_SETUP.txt 참고해서 두 값을 채워넣으세요 === */
+const SUPABASE_URL = "https://scgfnkmwnrtknrsqnrns.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_aMW8gMl7zgkgtU7-ZCKi1w_7LBqYnaW";
+
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const listEl = document.getElementById('gb-list');
+
+if (SUPABASE_URL.includes("여기에_")) {
+  listEl.innerHTML = '<p class="empty">방명록 설정이 아직 안 됐습니다. SUPABASE_SETUP.txt를 참고하세요.</p>';
+} else {
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  async function load() {
+    const { data, error } = await db.from('guestbook')
+      .select('name,message,created_at').order('created_at', { ascending: false }).limit(100);
+    if (error) { listEl.innerHTML = '<p class="empty">불러오기에 실패했습니다.</p>'; return; }
+    if (!data.length) { listEl.innerHTML = '<p class="empty">첫 방명록을 남겨주세요.</p>'; return; }
+    listEl.innerHTML = data.map(e => {
+      const d = new Date(e.created_at);
+      const date = d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0');
+      return '<div class="entry"><div class="meta">' + esc(e.name) + ' · ' + date + '</div>'
+        + '<div class="msg">' + esc(e.message) + '</div></div>';
+    }).join('');
+  }
+
+  document.getElementById('gb-form').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const btn = document.getElementById('gb-btn');
+    const name = document.getElementById('gb-name').value.trim();
+    const message = document.getElementById('gb-msg').value.trim();
+    if (!name || !message) return;
+    btn.disabled = true;
+    const { error } = await db.from('guestbook').insert({ name, message });
+    btn.disabled = false;
+    if (error) { alert('등록에 실패했습니다.'); return; }
+    document.getElementById('gb-name').value = '';
+    document.getElementById('gb-msg').value = '';
+    load();
+  });
+
+  load();
+}
+</script>
+</body>
+</html>
