@@ -14,7 +14,7 @@ PDF_BUTTON_EXCLUDE = {"엄마가될자격.pdf"}
 # auto_deploy.py를 실행해도 이 버튼들은 항상 같은 모양으로 유지됩니다.
 CUSTOM_BUTTONS = [
     ("카카오톡뷰어", "kakaotalk-viewer.html", "btn"),          # 카톡 TXT·HWPX 뷰어 도구
-    ("동해냥", "donghae.html", "btn"),              # 동해 바다 고양이
+    ("동해냥", "donghae.html", "btn btn-gold"),     # 동해 바다 고양이 (골드 옐로우)
     ("방명록 남기기", "guestbook.html", "btn btn-outline"),    # 자체 방명록 (Supabase 연동)
 ]
 
