@@ -15,7 +15,6 @@ PDF_BUTTON_EXCLUDE = {"엄마가될자격.pdf"}
 CUSTOM_BUTTONS = [
     ("카카오톡뷰어", "kakaotalk-viewer.html", "btn"),          # 카톡 TXT·HWPX 뷰어 도구
     ("동해냥", "donghae.html", "btn btn-gold"),     # 동해 바다 고양이 (골드 옐로우)
-    ("방명록 남기기", "guestbook.html", "btn btn-outline"),    # 자체 방명록 (Supabase 연동)
 ]
 
 # 이 스크립트가 있는 디렉토리를 작업 경로로 사용
